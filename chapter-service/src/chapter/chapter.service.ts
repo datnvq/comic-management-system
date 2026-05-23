@@ -7,6 +7,8 @@ import { Model } from 'mongoose';
 import { Chapter, ChapterDocument } from '../schemas/chapter.schema';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { getChannel } from '../rabbitmq/rabbitmq.provider';
+import { redisClient } from '../redis/redis.provider';
+import { ConflictException } from '@nestjs/common';
 
 @Injectable()
 export class ChapterService {
@@ -16,7 +18,42 @@ export class ChapterService {
   ) {}
 
   async create(createChapterDto: CreateChapterDto) {
-    const chapter = await this.chapterModel.create(createChapterDto);
+  const lockKey = `chapter_lock:${createChapterDto.comicId}:${createChapterDto.chapterNumber}`;
+
+  const lock = await redisClient.set(
+    lockKey,
+    'LOCKED',
+    {
+      NX: true,
+      EX: 10,
+    },
+  );
+
+  if (!lock) {
+    throw new ConflictException(
+      'Another request is creating this chapter',
+    );
+  }
+
+  try {
+    const existingChapter =
+      await this.chapterModel.findOne({
+        comicId: createChapterDto.comicId,
+        chapterNumber:
+          createChapterDto.chapterNumber,
+      });
+
+    if (existingChapter) {
+      throw new ConflictException(
+        'Chapter number already exists',
+      );
+    }
+
+    const chapter =
+      await this.chapterModel.create(
+        createChapterDto,
+      );
+
     const channel = getChannel();
 
     channel.sendToQueue(
@@ -26,18 +63,25 @@ export class ChapterService {
           chapterId: chapter._id,
           comicId: chapter.comicId,
           title: chapter.title,
-          chapterNumber: chapter.chapterNumber,
+          chapterNumber:
+            chapter.chapterNumber,
         }),
       ),
     );
 
-    console.log('Event published: chapter.created');
+    console.log(
+      'Event published: chapter.created',
+    );
 
     return {
-      message: 'Chapter created successfully',
+      message:
+        'Chapter created successfully',
       chapter,
     };
+  } finally {
+    await redisClient.del(lockKey);
   }
+}
 
   async findByComic(comicId: string) {
     return this.chapterModel

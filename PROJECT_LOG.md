@@ -771,3 +771,34 @@ Ghi chú:
 - Authentication: xác định người dùng là ai
 - Authorization: xác định người dùng được phép làm gì
 - Role được kiểm tra tập trung tại API Gateway
+
+### Bước 41: Distributed Lock bằng Redis cho Chapter Service
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Tích hợp Redis lock cho tạo chapter
+- Tạo lock theo:
+  comicId + chapterNumber
+- Chặn race condition khi nhiều request tạo cùng chapter
+- Tự động release lock bằng finally
+- Thêm expiration time tránh deadlock
+- Kiểm tra duplicate chapterNumber trong database
+
+Flow:
+Request tạo chapter
+-> Redis lock
+-> kiểm tra chapter tồn tại
+-> create MongoDB
+-> publish RabbitMQ event
+-> release lock
+
+Test:
+- Tạo chapter lần đầu thành công
+- Tạo lại cùng chapterNumber trả 409 Conflict
+- Tạo chapterNumber khác vẫn thành công
+
+Ghi chú:
+- Sử dụng Redis Distributed Lock
+- Hỗ trợ synchronization trong distributed system
+- Tránh race condition và duplicate data
