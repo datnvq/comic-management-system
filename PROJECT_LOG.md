@@ -748,3 +748,26 @@ MongoDB Container
 Ghi chú:
 - Backup file lưu tại backup/backup.archive
 - Có thể dùng để restore dữ liệu khi hệ thống gặp sự cố
+
+### Bước 40: Role-based Authorization ADMIN / USER
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Sử dụng role trong User Schema
+- JWT payload chứa thông tin role
+- API Gateway kiểm tra role trong middleware
+- Chặn USER gọi các API quản trị
+- Chỉ ADMIN được phép:
+  - tạo truyện
+  - sửa truyện
+  - xóa truyện
+  - tạo chapter
+- Test thành công:
+  - USER token trả `403 Forbidden: Admin only`
+  - ADMIN token thực hiện API thành công
+
+Ghi chú:
+- Authentication: xác định người dùng là ai
+- Authorization: xác định người dùng được phép làm gì
+- Role được kiểm tra tập trung tại API Gateway
