@@ -2,10 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { AppModule } from './app.module';
 import { authMiddleware } from './middleware/auth.middleware';
+import { loggerMiddleware } from './middleware/logger.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+  app.use(loggerMiddleware);
 
   app.use(authMiddleware);
 

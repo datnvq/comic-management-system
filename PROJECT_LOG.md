@@ -709,3 +709,20 @@ Trạng thái: Hoàn thành
 Ghi chú:
 - Health Check dùng để kiểm tra service còn hoạt động hay không
 - Có thể dùng cho monitoring, Docker, Kubernetes hoặc load balancer
+
+### Bước 38: Logging Request tại API Gateway
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Tạo logging middleware cho API Gateway
+- Log method và URL của request
+- Hiển thị timestamp cho mỗi request
+- Test logging bằng Postman thành công
+
+Ví dụ log:
+[2026-05-20T10:00:00.000Z] GET /api/comics
+
+Ghi chú:
+- Logging hỗ trợ monitoring và debugging hệ thống
+- Có thể mở rộng bằng Winston hoặc ELK Stack
