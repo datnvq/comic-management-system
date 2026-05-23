@@ -677,3 +677,22 @@ Frontend
 Ghi chú:
 - Chapter reader hiện hoạt động như web truyện thực tế
 - Ảnh được nối liền nhau theo chiều dọc
+
+### Bước 36: Upload ảnh local cho Comic và Chapter
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Comic Service hỗ trợ upload cover image từ thiết bị
+- Chapter Service hỗ trợ upload nhiều ảnh chapter từ thiết bị
+- Sử dụng Multer để xử lý multipart/form-data
+- Lưu file ảnh vào thư mục `uploads`
+- Serve static file qua `/uploads`
+- Frontend hỗ trợ chọn ảnh bìa truyện
+- Frontend hỗ trợ chọn nhiều ảnh chapter
+- Chapter reader hiển thị ảnh thật và nối liền nhau
+
+Ghi chú:
+- Comic cover dùng 1 ảnh
+- Chapter dùng mảng nhiều ảnh
+- MongoDB lưu URL ảnh sau khi upload
