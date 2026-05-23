@@ -726,3 +726,25 @@ Ví dụ log:
 Ghi chú:
 - Logging hỗ trợ monitoring và debugging hệ thống
 - Có thể mở rộng bằng Winston hoặc ELK Stack
+
+### Bước 39: Backup và Restore MongoDB
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Tạo script backup MongoDB bằng mongodump
+- Backup toàn bộ MongoDB container ra file archive
+- Copy file backup ra máy thật
+- Tạo folder backup lưu dữ liệu
+- Test backup thành công
+
+Flow:
+MongoDB Container
+-> mongodump
+-> backup.archive
+-> docker cp
+-> backup/
+
+Ghi chú:
+- Backup file lưu tại backup/backup.archive
+- Có thể dùng để restore dữ liệu khi hệ thống gặp sự cố
