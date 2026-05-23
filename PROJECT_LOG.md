@@ -696,3 +696,16 @@ Ghi chú:
 - Comic cover dùng 1 ảnh
 - Chapter dùng mảng nhiều ảnh
 - MongoDB lưu URL ảnh sau khi upload
+
+### Bước 37: Thêm Health Check cho API Gateway
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Thêm endpoint `GET /health`
+- API Gateway trả trạng thái hoạt động của service
+- Test health check thành công
+
+Ghi chú:
+- Health Check dùng để kiểm tra service còn hoạt động hay không
+- Có thể dùng cho monitoring, Docker, Kubernetes hoặc load balancer
