@@ -886,3 +886,114 @@ Ghi chú:
   - **Email**: `admin@example.com`
   - **Password**: `admin123`
 - Phục vụ quá trình nghiệm thu, kiểm thử khép kín (End-to-End) toàn bộ các dịch vụ mà không cần cấu hình thủ công ở cơ sở dữ liệu
+
+### Bước 48: Phân tách giao diện và thiết lập bộ định tuyến màn hình riêng biệt (View-based Routing System)
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Xây dựng bộ định tuyến trạng thái màn hình (`view` state) gồm 3 phân vùng độc lập: `'public'` (độc giả), `'login'` (đăng nhập chuyên biệt) và `'admin'` (quản trị nội dung) trong `App.tsx`
+- Thiết kế thanh điều hướng nổi cố định phía trên (Fixed Top Navigation Header) mang phong cách hiện đại với các liên kết tương tác linh hoạt dựa trên trạng thái xác thực
+- Tạo dựng trang Đăng nhập chuyên biệt (`login-container` & `login-card`) dạng kính mờ căn giữa toàn màn hình kèm hiệu ứng chuyển động mượt mà
+- Thiết kế không gian làm việc chuyên dụng cho Quản trị viên (`admin-container` & `admin-grid`), gom cụm 2 khung tạo truyện và chapter cạnh nhau giúp tránh xáo trộn và trùng lặp với trang chủ độc giả
+- Tích hợp tính năng tự động chuyển hướng màn hình thông minh (ví dụ: tự chuyển sang bảng Admin ngay khi đăng nhập thành công, và tự quay lại Trang chủ khi đăng xuất)
+
+Ghi chú:
+- Giải quyết triệt để vấn đề bố cục lộn xộn cũ khi bảng Admin hiển thị đè lên danh sách truyện ở trang chủ
+- Tăng tính bảo mật giao diện và mang lại trải nghiệm chuyên nghiệp chuẩn SPA (Single Page Application) cho nền tảng đọc truyện
+
+### Bước 49: Khắc phục triệt để lỗi không đăng nhập được và không load được danh sách truyện (WSL2 Hostname Bypassing)
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Phát hiện lỗi kết nối `ERR_CONNECTION_RESET` thường xảy ra trên hệ thống Windows WSL2 khi cố gắng truy cập qua cổng `localhost:3000` (API Gateway) từ giao diện Web, gây ra hiện tượng không đăng nhập được và danh sách truyện tải vô tận (loading mãi không hiện).
+- Triển khai cơ chế phân giải hostname thông minh và tự động tại `App.tsx` của Frontend: nếu người dùng truy cập trang web bằng tên miền `localhost`, ứng dụng sẽ tự động chuyển hướng các cuộc gọi API dưới dạng ngầm tới địa chỉ IP loopback vật lý `127.0.0.1` (`apiHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname`).
+- Thực hiện build lại toàn bộ các container Docker bằng lệnh `docker-compose up -d --build` để đồng bộ các thay đổi mới và đảm bảo Vite compiler cập nhật bản build mới nhất của Frontend.
+- Kiểm thử và xác minh trực tiếp luồng API thông qua PowerShell (`Invoke-RestMethod`):
+  - Dữ liệu truyện tranh đã tải lên trước đó ("Sự tích hoa mào" và "sự tích cây bút thần") được xác nhận là vẫn tồn tại an toàn, trọn vẹn trong MongoDB và hiển thị chính xác.
+  - API đăng nhập của Auth Service qua API Gateway tại địa chỉ `127.0.0.1:3000/api/auth/login` hoạt động mượt mà, xác thực tài khoản `admin@example.com` với mật khẩu `admin123` và trả về JWT Access Token thành công.
+  - Danh sách truyện được Gateway fetch từ Comic Service và trả về chính xác cho Frontend, chấm dứt hoàn toàn hiện tượng treo trang.
+
+Ghi chú:
+- Đảm bảo tính ổn định tối đa của hệ thống trong mọi môi trường phát triển (bao gồm cả WSL2 trên Windows).
+- Giúp người dùng trải nghiệm mượt mà bằng cách truy cập `http://127.0.0.1:5173` hoặc `http://localhost:5173`.
+
+### Bước 50: Nâng cấp toàn diện giao diện Quản trị (Admin UX Overhaul) và tích hợp API Xóa Chapter
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- **Backend - Thêm API Xóa Chapter (`DELETE /chapters/:id`):** 
+  - Thêm phương thức `remove` trong `ChapterService` (`chapter-service`) kết nối MongoDB thông qua `findByIdAndDelete` để xóa chương sạch sẽ.
+  - Khai báo endpoint `@Delete(':id')` trong `ChapterController` để tiếp nhận yêu cầu xóa.
+  - Tích hợp bảo mật phân quyền `ADMIN` tập trung tại API Gateway JWT Middleware để chặn các request trái phép.
+- **Frontend - Cải tiến toàn diện trải nghiệm Quản trị (Admin UX Overhaul):**
+  - **Trang lưới truyện mặc định:** Thiết kế lưới card truyện kính mờ hiển thị ngay khi Admin đăng nhập, đi kèm nút bấm nổi bật `➕ Thêm truyện mới` ở phía trên.
+  - **Phân tách form tạo tác phẩm:** Chuyển form tạo truyện mới thành một chế độ xem phụ có nút `← Quay lại` rõ ràng để tránh gây lộn xộn.
+  - **Màn hình chi tiết chương (Drill-down):** Khi Admin click chọn một bộ truyện, hệ thống chuyển sang màn hình quản lý chương chuyên biệt. Hiển thị metadata truyện, danh sách chương và form thêm chương mới.
+  - **Đăng tải chương thông minh:** Form đăng chương tự động gán mã truyện đang chọn (loại bỏ thao tác copy-paste ID thủ công) và tự động tăng số chương tiếp theo.
+  - **Nút xóa chương màu đỏ neon:** Tích hợp nút `🗑️ Xóa` bên cạnh mỗi chương, gọi trực tiếp API DELETE qua Gateway và tự động làm mới danh sách chương.
+- **Docker Compose Rebuild:** Thực hiện build và chạy lại dịch vụ `chapter-service` và `frontend` thành công.
+- **Kiểm thử E2E:** 
+  - Kiểm thử trực tiếp xóa chapter thử nghiệm có ID `6a0e80af09f1791b05df38dc` qua cổng Gateway thành công rực rỡ ("Chapter deleted successfully"). Dữ liệu được xóa sạch khỏi MongoDB.
+
+- Giao diện Admin chuyên nghiệp, tối giản, và trực quan chuẩn kiến trúc ứng dụng hiện đại.
+- Cải thiện tối đa hiệu suất thao tác đăng truyện và đăng chương của Quản trị viên.
+
+### Bước 51: Sửa lỗi va chạm bố cục nút Quay Lại (Fixed Back Button Layout Collision)
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- **Phát hiện lỗi va chạm layout:** Nút "Quay lại danh sách truyện" sử dụng class `.back-button` có thuộc tính `position: absolute` khiến nó bị đè trực tiếp lên góc trái trên của ảnh bìa truyện (`.admin-detail-cover`), che khuất hình ảnh.
+- **Tách biệt kiểu dáng nút Admin (`.admin-back-btn`):** Thay thế class của các nút quay lại của Admin trong `App.tsx` bằng `.admin-back-btn`.
+- **Định nghĩa CSS tĩnh tự nhiên (`App.css`):**
+  - Loại bỏ định vị tuyệt đối `position: absolute` cho nút Admin.
+  - Sử dụng dòng chảy tĩnh tự nhiên (`display: inline-flex` và `position: relative / static`) giúp nút tự động nằm ở trên cùng của trang chi tiết, đẩy toàn bộ ảnh bìa và metadata truyện xuống phía dưới một cách ngăn nắp.
+  - Bổ sung hiệu ứng vi hiệu ứng hover sáng neon tím tím mờ và chuyển động dịch chuyển nhẹ sang trái (`transform: translateX(-3px)`) nhằm nâng cao tính thẩm mỹ và cảm giác tương tác mượt mà.
+- **Docker Rebuild:** Khởi động lại container `frontend` và biên dịch thành công mã nguồn CSS/JSX mới.
+
+- Giải quyết triệt để lỗi hiển thị đè ảnh bìa truyện, đảm bảo giao diện đẹp mắt, sạch sẽ và hoàn chỉnh 100%.
+
+### Bước 52: Tích hợp hoạt ảnh chuyển tiếp Butter-Smooth tối ưu đồ họa phần cứng (Hardware-Accelerated Transitions)
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- **Định nghĩa các Keyframes hoạt ảnh chuyên nghiệp ở `App.css`:**
+  - `fadeInUp`: Đẩy nhẹ nội dung từ dưới lên (`translateY(16px)` về `0`) kết hợp mờ dần (opacity) trong `0.45s` tạo cảm giác chuyển động mượt mà.
+  - `scaleIn`: Thu phóng chiều sâu nhẹ nhàng (`scale(0.97)` lên `1`) trong `0.4s` tạo hiệu ứng êm ái cho các form kính mờ và box chi tiết.
+  - Kích hoạt tăng tốc phần cứng GPU bằng thuộc tính `will-change: transform, opacity` và hàm điều hướng gia tốc nâng cao `cubic-bezier(0.16, 1, 0.3, 1)`.
+- **Đồng bộ hóa hoạt ảnh vào các luồng chuyển trang trong `App.tsx`:**
+  - Áp dụng `.animate-fade-in-up` cho trang chủ Độc giả, trang Đăng nhập và Bảng điều khiển Admin chính.
+  - Áp dụng `.animate-scale-in` cho các form thêm truyện mới, form thêm chapter riêng biệt và hộp chi tiết truyện.
+  - Tích hợp hiệu ứng trượt nhẹ nâng lên cho danh sách chapter khi được nạp.
+- **Docker Compose Build & Test:** Khởi động lại container `frontend` và biên dịch thành công bản build tối ưu mới nhất.
+
+Ghi chú:
+- Mang lại trải nghiệm chuyển trang Butter-Smooth sang trọng, tinh tế chuẩn ứng dụng SaaS/SPA cao cấp bậc nhất.
+- Hỗ trợ cuộn lướt và tương tác thị giác tuyệt vời cho người dùng ở cả máy tính lẫn thiết bị di động.
+
+### Bước 53: Phân tách giao diện Đăng Chương mới thành màn hình riêng biệt (Dedicated Add Chapter View)
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- **Ẩn form Đăng Chapter khỏi Trang Chi tiết (Drill-down):** 
+  - Loại bỏ hoàn toàn khối nhập liệu "Thêm Chapter" ở cột phải trang chi tiết truyện của Admin, mở rộng tối đa không gian hiển thị danh sách mục lục chương giúp Admin dễ theo dõi.
+  - Tích hợp nút bấm hành động lớn nổi bật: **`➕ Đăng chapter mới`** ngay cạnh tiêu đề mục lục.
+- **Xây dựng Trang Đăng Chương riêng biệt (Dedicated Workspace):**
+  - Khai báo state quản lý điều phối `showAddChapterForm` dạng boolean trong `App.tsx`.
+  - Thiết kế màn hình kính mờ toàn khung độc lập dành riêng cho đăng chương, tự động hiển thị tên tác phẩm đang được chọn để tăng tính trực quan.
+  - **Tự động điền số chương tiếp theo (Auto-increment):** Tích hợp giải thuật tự động quét qua mảng `chapters` của truyện để tìm số chương lớn nhất và tự điền trước `chapterNumber + 1` vào ô nhập liệu, giúp Admin tiết kiệm tối đa thời gian thao tác.
+  - Cung cấp nút **`← Quay lại mục lục`** để hủy thao tác ngầm và làm sạch form.
+  - **Chuyển hướng thông minh:** Khi tạo chương thành công, hệ thống hiển thị thông báo, tự động đóng màn hình thêm chương và chuyển hướng Admin trở lại danh sách chương để thấy ngay chương mới nạp vào.
+- **Docker Compose Rebuild:** Chạy lại dịch vụ `frontend` và biên dịch mã nguồn React mới nhất thành công.
+
+Ghi chú:
+- Phân luồng công việc đăng chương vô cùng sạch sẽ, tập trung hoàn toàn vào tác vụ đang xử lý của quản trị viên.
+- Giải quyết hoàn toàn sự bất tiện khi phải chọn thủ công ID truyện trong danh sách thả xuống.
+
+
+

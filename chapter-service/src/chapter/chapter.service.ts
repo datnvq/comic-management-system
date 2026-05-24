@@ -98,4 +98,16 @@ export class ChapterService {
 
     return chapter;
   }
+
+  async remove(id: string) {
+    const chapter = await this.chapterModel.findByIdAndDelete(id);
+
+    if (!chapter) {
+      throw new NotFoundException('Chapter not found');
+    }
+
+    return {
+      message: 'Chapter deleted successfully',
+    };
+  }
 }
