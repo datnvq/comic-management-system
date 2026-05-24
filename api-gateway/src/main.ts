@@ -35,6 +35,14 @@ async function bootstrap() {
     }),
   );
 
+  app.use(
+    '/api/search',
+    createProxyMiddleware({
+      target: 'http://search-service:3005/search',
+      changeOrigin: true,
+    }),
+  );
+
   await app.listen(3000);
 }
 bootstrap();

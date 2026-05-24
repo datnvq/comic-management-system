@@ -802,3 +802,87 @@ Ghi chú:
 - Sử dụng Redis Distributed Lock
 - Hỗ trợ synchronization trong distributed system
 - Tránh race condition và duplicate data
+
+### Bước 42: Khắc phục lỗi treo màn hình trắng bằng cơ chế Defensive Checking ở Frontend
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Tích hợp kiểm tra kiểu dữ liệu mảng an toàn bằng `Array.isArray()` trong `fetchComics` và `fetchChapters` ở `App.tsx`
+- Bổ sung hiển thị chỉ báo đang tải (loading indicators) sinh động khi gọi API
+- Thiết lập cơ chế tự động nạp ảnh bìa nghệ thuật chất lượng cao từ thư viện Unsplash nếu ảnh thật chưa được tải lên hoặc gặp lỗi tải tập tin (404)
+- Triển khai vi hiệu ứng ẩn các trang chương bị hỏng tự động trong Trình đọc để tăng sự liền mạch
+
+Ghi chú:
+- Đảm bảo ứng dụng Frontend không bao giờ bị treo trắng trang kể cả khi dịch vụ Gateway/Backend phản hồi lỗi hoặc trả dữ liệu không mong muốn
+- Tối ưu hóa trải nghiệm khách truy cập bằng thiết kế ảnh thay thế (fallback images)
+
+### Bước 43: Nâng cấp toàn diện giao diện người dùng sang Premium Dark Theme và Glassmorphic UI
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Tích hợp các bộ font chữ thiết kế cao cấp `Outfit` và `Plus Jakarta Sans` trực tiếp từ Google Fonts
+- Chuyển đổi toàn bộ nền tảng sang chủ đề tối sang trọng với mã màu `#09090b` và các dải sắc Tím/Hồng Neon gradient nổi bật
+- Thiết kế giao diện hiệu ứng kính mờ (Glassmorphism) với đường viền trong suốt và độ nhám mịn màng (`backdrop-filter`) cho các khung Login, Admin và Chi tiết truyện
+- Nâng cấp Trình đọc chương (Chapter Reader) dạng cuộn dọc Webtoon vô cực, nền tối tối giản tạo trải nghiệm đọc chuyên nghiệp
+- Bổ sung hiệu ứng hover chuyển động tỷ lệ nhẹ nhàng (`scale`) và đổ bóng phát quang khi di chuột vào các thẻ truyện tranh
+
+Ghi chú:
+- Đạt tiêu chuẩn thẩm mỹ cao cấp, tăng tính tương tác mạnh mẽ cho giao diện người dùng
+
+### Bước 44: Đồng bộ Docker Volumes lưu trữ các tập tin tải lên vĩnh viễn (Persistent Volumes)
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Ánh xạ đường dẫn vật lý cục bộ từ máy Windows host vào các thư mục `/app/uploads` trong Docker Compose cho hai container: `comic-service` và `chapter-service`
+- Cấu hình lưu trữ tệp tin ảnh tải lên vĩnh viễn (Persistent Volumes) trong file `docker-compose.yml`
+- Đồng bộ cơ chế serve static files qua cổng mapped `3002/uploads` và `3003/uploads` ổn định
+- Test tải lên ảnh bìa truyện thật từ giao diện và ghi tệp thành công ra thư mục vật lý ở máy thật
+
+Ghi chú:
+- Giải quyết hoàn toàn sự cố mất mát hình ảnh khi container bị xóa, rebuild hoặc khởi động lại
+- Tất cả ảnh mới đăng tải đều được bảo toàn trọn vẹn và an toàn
+
+### Bước 45: Nhất quán kiến trúc Microservices qua việc tích hợp Search Service vào API Gateway
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Bổ sung cấu hình proxy chuyển tiếp `/api/search` tới dịch vụ `http://search-service:3005/search` trong `main.ts` của `api-gateway`
+- Cập nhật hàm `fetchComics` ở `App.tsx` phía Frontend để chuyển truy vấn từ cổng `3005` trực tiếp sang cổng API Gateway tập trung `3000/api/search`
+- Build và kiểm thử thành công: Luồng dữ liệu tìm kiếm đi qua cổng Gateway duy nhất hoạt động cực kỳ mượt mà
+
+Ghi chú:
+- Chuẩn hóa toàn diện kiến trúc cổng API Gateway, loại bỏ hoàn toàn việc Frontend phải kết nối trực tiếp với nhiều cổng dịch vụ khác nhau
+- Thuận tiện tối đa cho việc cấu hình bảo mật, tường lửa và triển khai môi trường Production thực tế
+
+### Bước 46: Nâng cấp trải nghiệm quản trị (Admin UX) bằng bộ chọn danh sách truyện tự động
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Thay thế hoàn toàn ô nhập liệu thô "Mã truyện (Comic ID)" bằng thẻ chọn lựa chọn thả xuống `<select>` tự động được nạp từ danh sách `comics` ở Frontend
+- Tự động gán lựa chọn mặc định vào bộ chọn là bộ truyện đầu tiên có trong danh sách ngay khi tải trang
+- Hiển thị song song tiêu đề truyện và rút ngắn mã ID (`title (id...)`) giúp Admin dễ dàng nhận diện tác phẩm khi thêm chương mới
+
+Ghi chú:
+- Loại bỏ hoàn toàn thao tác thủ công sao chép-dán mã định dạng hexadecimal (24 kí tự) dễ gây nhầm lẫn của MongoDB
+- Giúp quy trình đăng tải chương mới trở nên trực quan, nhanh chóng và chuyên nghiệp hơn rất nhiều
+
+### Bước 47: Cấu hình và Cập nhật Tài khoản Quản trị Admin mặc định trong Database
+
+Trạng thái: Hoàn thành
+
+Đã thực hiện:
+- Phát hiện tài khoản thử nghiệm `admin@example.com` mặc định có phân quyền (`role`) là `USER`, dẫn đến lỗi `403 Forbidden` khi thao tác trên trang Admin ở Frontend
+- Thực thi truy vấn MongoDB cập nhật phân quyền của tài khoản `admin@example.com` thành `ADMIN`
+- Cấu hình mật khẩu mặc định được băm mã hóa bằng bcrypt thành công: `admin123`
+- Đăng nhập thử nghiệm thành công ở giao diện Web, mở khóa toàn bộ bảng quản trị thêm truyện và thêm chương mượt mà
+
+Ghi chú:
+- Thông tin đăng nhập Admin chính thức của hệ thống:
+  - **Email**: `admin@example.com`
+  - **Password**: `admin123`
+- Phục vụ quá trình nghiệm thu, kiểm thử khép kín (End-to-End) toàn bộ các dịch vụ mà không cần cấu hình thủ công ở cơ sở dữ liệu

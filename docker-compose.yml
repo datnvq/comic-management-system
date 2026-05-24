@@ -32,6 +32,8 @@ services:
     container_name: comic_comic_service
     ports:
       - "3002:3002"
+    volumes:
+      - ./comic-service/uploads:/app/uploads
     depends_on:
       - mongodb
   chapter-service:
@@ -39,6 +41,8 @@ services:
     container_name: comic_chapter_service
     ports:
       - "3003:3003"
+    volumes:
+      - ./chapter-service/uploads:/app/uploads
     depends_on:
       - mongodb
   api-gateway:
