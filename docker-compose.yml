@@ -74,6 +74,9 @@ services:
     container_name: comic_frontend
     ports:
       - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - api-gateway
 
